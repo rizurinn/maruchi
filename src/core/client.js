@@ -314,12 +314,6 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
       footer = "",
       buttons = [],
       interactiveButtons = [],
-      // List Message support
-      sections = null,
-      listType = "SINGLE_SELECT",
-      buttonText = "Menu",
-      description = "",
-      // Interactive Message fields
       hasMediaAttachment = false,
       image = null,
       video = null,
@@ -334,65 +328,12 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
       businessOwnerJid = null,
       contextInfo = null,
       externalAdReply = null,
-      // messageParamsJson for tap target / thumbnail URL preview
-      tapTarget = null,
     } = content;
 
-    // ─────────────────────────────────────────────────────────────
-    // MODE 1: LIST MESSAGE — ketika sections diberikan
-    // ─────────────────────────────────────────────────────────────
-    if (Array.isArray(sections) && sections.length > 0) {
-      const listContent = {
-        listMessage: {
-          title: title || undefined,
-          description: description || text || caption || "",
-          buttonText: buttonText || "Menu",
-          listType: listType,
-          sections: sections.map((section) => ({
-            title: section.title || undefined,
-            rows: Array.isArray(section.rows)
-              ? section.rows.map((row) => ({
-                  title: row.title || "",
-                  description: row.description || undefined,
-                  rowId: row.rowId || row.id || row.title,
-                }))
-              : [],
-          })),
-        },
-      };
-
-      // Quoted support untuk list message
-      const listRelayOpts = {};
-      if (options.quoted) {
-        listContent.listMessage.contextInfo = {
-          stanzaId: options.quoted.key.id,
-          remoteJid: options.quoted.key.remoteJid,
-          participant: options.quoted.key.participant || options.quoted.key.remoteJid,
-          fromMe: options.quoted.key.fromMe,
-          quotedMessage: options.quoted.message,
-        };
-      }
-
-      const listMsg = generateWAMessageFromContent(jid, listContent, {
-        userJid: conn.user.id,
-        quoted: options?.quoted || null,
-      });
-
-      await conn.relayMessage(jid, listMsg.message, {
-        messageId: listMsg.key.id,
-        ...listRelayOpts,
-      });
-
-      return listMsg;
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // MODE 2: INTERACTIVE (NATIVE FLOW) MESSAGE — dengan buttons
-    // ─────────────────────────────────────────────────────────────
     const allButtons = [...buttons, ...interactiveButtons];
 
     if (!Array.isArray(allButtons) || allButtons.length === 0) {
-      throw new Error("buttons, interactiveButtons, atau sections harus diisi");
+      throw new Error("buttons or interactiveButtons must be a non-empty array");
     }
 
     // Proses buttons
@@ -408,8 +349,8 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
       if (btn.name && btn.buttonParamsJson) {
         processedButtons.push({
           name: btn.name,
-          buttonParamsJson: typeof btn.buttonParamsJson === 'string'
-            ? btn.buttonParamsJson
+          buttonParamsJson: typeof btn.buttonParamsJson === 'string' 
+            ? btn.buttonParamsJson 
             : JSON.stringify(btn.buttonParamsJson)
         });
         continue;
@@ -436,23 +377,7 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
         continue;
       }
 
-      // Format 4: cta_url shorthand { url, displayText }
-      if (btn.url && (btn.displayText || btn.text)) {
-        processedButtons.push({
-          name: "cta_url",
-          buttonParamsJson: JSON.stringify({
-            display_text: btn.displayText || btn.text,
-            url: btn.url,
-            webview_presentation: btn.webviewPresentation || null,
-            payment_link_preview: false,
-            landing_page_url: btn.landingPageUrl || btn.url,
-            webview_interaction: btn.webviewInteraction !== false,
-          }),
-        });
-        continue;
-      }
-
-      // Format 5: buttonId + buttonText
+      // Format 4: buttonId + buttonText
       if (btn.buttonId && btn.buttonText?.displayText) {
         if (btn.type === 4 || btn.nativeFlowInfo) {
           const flowInfo = btn.nativeFlowInfo || {};
@@ -502,7 +427,7 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
         hasMediaAttachment: hasMediaAttachment || true,
         imageMessage: preparedMedia.imageMessage,
       };
-    }
+    } 
     // Handle Video
     else if (video) {
       const mediaInput = {};
@@ -523,7 +448,7 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
         hasMediaAttachment: hasMediaAttachment || true,
         videoMessage: preparedMedia.videoMessage,
       };
-    }
+    } 
     // Handle Document
     else if (document) {
       const mediaInput = { document: {} };
@@ -558,7 +483,7 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
         hasMediaAttachment: hasMediaAttachment || true,
         documentMessage: preparedMedia.documentMessage,
       };
-    }
+    } 
     // Handle Location
     else if (location && typeof location === "object") {
       messageContent.header = {
@@ -571,7 +496,7 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
           address: location.address || "",
         },
       };
-    }
+    } 
     // Handle Product
     else if (product && typeof product === "object") {
       let productImageMessage = null;
@@ -609,7 +534,7 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
           businessOwnerJid: businessOwnerJid || product.businessOwnerJid || conn.user.id,
         },
       };
-    }
+    } 
     // Handle Text Only
     else if (title) {
       messageContent.header = {
@@ -631,37 +556,12 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
       messageContent.footer = { text: footer };
     }
 
-    // ── Build nativeFlowMessage ──────────────────────────────────
-    // messageParamsJson: opsional untuk tap target / thumbnail URL
-    // Bisa diisi via tapTarget: { url, title, domain, buttonIndex }
-    // atau via content.messageParamsJson (string JSON langsung)
-    let messageParamsJson = content.messageParamsJson || null;
-
-    if (!messageParamsJson && tapTarget && typeof tapTarget === "object") {
-      const tapEntry = {
-        canonical_url: tapTarget.canonicalUrl || tapTarget.url || "",
-        url_type: tapTarget.urlType || "STATIC",
-        button_index: tapTarget.buttonIndex ?? 0,
-        title: tapTarget.title || "",
-        domain: tapTarget.domain || (tapTarget.url ? new URL(tapTarget.url).hostname : ""),
-        tap_target_format: tapTarget.format ?? 1,
-      };
-      messageParamsJson = JSON.stringify({
-        bottom_sheet: {
-          in_thread_buttons_limit: allButtons.length,
-          divider_indices: tapTarget.dividerIndices || [],
-        },
-        tap_target_configuration: tapEntry,
-        tap_target_list: [tapEntry],
-      });
-    }
-
+    // Buttons
     messageContent.nativeFlowMessage = {
       buttons: processedButtons,
-      ...(messageParamsJson && { messageParamsJson }),
     };
 
-    // ── Context Info ─────────────────────────────────────────────
+    // Context Info
     if (contextInfo && typeof contextInfo === "object") {
       messageContent.contextInfo = { ...contextInfo };
     } else if (externalAdReply && typeof externalAdReply === "object") {
@@ -706,7 +606,7 @@ conn.sendButton = async (jid, content = {}, options = {}) => {
         remoteJid: options.quoted.key.remoteJid,
         participant: options.quoted.key.participant || options.quoted.key.remoteJid,
         fromMe: options.quoted.key.fromMe,
-        quotedMessage: options.quoted.message,
+        quotedMessage: options.quoted.message
       };
     }
 
