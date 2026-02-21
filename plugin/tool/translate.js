@@ -1,6 +1,6 @@
 import { langList, translate } from '#scraper';
 
-const handler = async (m, { args, usedPrefix, command, loading }) => {
+const handler = async (m, { args, text, usedPrefix, command, loading }) => {
     if (args[0]?.toLowerCase() === 'list') {
         try {
             const lang = await langList();
@@ -17,9 +17,9 @@ const handler = async (m, { args, usedPrefix, command, loading }) => {
     }
 
     const langCode = args.shift();
-    const text = (args.join(' ') || m.quoted?.body || '').trim();
+    const teks = (text || m.quoted?.body || '').trim();
 
-    if (!langCode || !text) {
+    if (!langCode || !teks) {
         return m.reply(`🍭 *Penerjemah Teks*
 
 *Penggunaan:*
@@ -63,7 +63,7 @@ ${usedPrefix + command} list`);
             );
         }
 
-        const tl = await translate(text, langCode);
+        const tl = await translate(teks, langCode);
 
         if (!tl || !tl[0]) {
             throw new Error('🍓 *Hasil terjemahan kosong atau tidak valid.*');

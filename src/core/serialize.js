@@ -33,7 +33,7 @@ export default async function serializeM(conn, msg, store) {
   try {
     if (!msg || !msg.message) return null;
     if (msg.messageStubType === 0 && !msg.message) {
-      log.warn('Skipping stub message without content');
+      log.warn('Melewati pesan tanpa konten');
       return null;
     }
 
@@ -314,9 +314,9 @@ export default async function serializeM(conn, msg, store) {
 
     return m;
   } catch (error) {
-    log.error({ error: JSON.stringify(error.stack, null, 2) }, 'Error in serializeMessage');
+    log.error({ error: JSON.stringify(error.stack, null, 2) }, 'Error pada pesan serialize');
     if (error.message?.includes('decrypt') || error.message?.includes('session')) {
-      log.error({ id: msg?.key?.remoteJid, user: msg?.key?.participant }, 'Failed to decrypt message');
+      log.error({ id: msg?.key?.remoteJid, user: msg?.key?.participant }, 'Gagal mendekripsi pesan');
     }
     return null;
   }

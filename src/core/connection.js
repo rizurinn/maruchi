@@ -157,7 +157,7 @@ class CircuitBreaker {
     this.failureCount = 0;
     this.lastFailureTime = 0;
     this.halfOpenSuccesses = 0;
-    logger.info('Circuit breaker reset');
+    logger.info('Pemutus arus dimuat ulang');
   }
 }
 
@@ -203,7 +203,7 @@ export class ConnectionManager {
         from: oldState,
         to: newState,
       },
-      'Connection state changed'
+      'Koneksi diperbaharui'
     );
 
     if (this.onStateChange) {
@@ -222,13 +222,13 @@ export class ConnectionManager {
   canReconnect() {
     // Check if already reconnecting
     if (this.isReconnecting) {
-      logger.debug('Reconnection already in progress');
+      logger.debug('Reconnection siap diproses');
       return false;
     }
 
     // Check circuit breaker
     if (!this.circuitBreaker.canAttempt()) {
-      logger.warn('Circuit breaker is open, blocking reconnection');
+      logger.warn('Pemutus arus terbuka, menghalangi penyambungan kembali');
       return false;
     }
 
@@ -245,7 +245,7 @@ export class ConnectionManager {
           attempts: this.reconnectWindow.length,
           limit: CONFIG.reconnect.maxAttemptsPerHour,
         },
-        'Reconnection rate limit exceeded'
+        'Reconnection mencapai batas'
       );
       return false;
     }
@@ -267,7 +267,7 @@ export class ConnectionManager {
 
   async scheduleReconnect(reason, customDelay = null, callback) {
     if (!this.canReconnect()) {
-      logger.error('Cannot reconnect at this time');
+      logger.error('Tidak dapat terhubung ulang saat ini');
       return false;
     }
 
@@ -290,14 +290,14 @@ export class ConnectionManager {
         attempt: this.reconnectWindow.length,
         maxAttempts: CONFIG.reconnect.maxAttemptsPerHour,
       },
-      'Scheduling reconnection'
+      'Menjadwalkan reconnection'
     );
 
     this.setState(ConnectionState.RECONNECTING);
 
     this.reconnectTimer = setTimeout(async () => {
       try {
-        logger.info('Executing reconnection');
+        logger.info('Mengeksekusi reconnection');
         await callback();
         this.circuitBreaker.recordSuccess();
       } catch (error) {
@@ -306,7 +306,7 @@ export class ConnectionManager {
             error: error.message,
             stack: error.stack,
           },
-          'Reconnection callback failed'
+          'Reconnection callback gagal'
         );
         this.circuitBreaker.recordFailure();
       } finally {
@@ -350,7 +350,7 @@ export class ConnectionManager {
             id: userId,
             uptime: this.getUptime(),
           },
-          'Connection established'
+          'Koneksi dimulai'
         );
 
         // Reload store
@@ -358,7 +358,7 @@ export class ConnectionManager {
           try {
             await store.reloadData();
           } catch (error) {
-            logger.error({ error: error.message }, 'Failed to reload store');
+            logger.error({ error: error.message }, 'Gagal memuat store');
           }
         }
 
@@ -367,7 +367,7 @@ export class ConnectionManager {
           try {
             await pluginLoader.loadAll();
           } catch (error) {
-            logger.error({ error: error.message }, 'Failed to load plugins');
+            logger.error({ error: error.message }, 'Gagal memuat plugin');
           }
         }
 
@@ -392,7 +392,7 @@ export class ConnectionManager {
             error: error?.message,
             output: error?.output,
           },
-          'Connection closed'
+          'Koneksi ditutup'
         );
 
         // Stop health monitoring
@@ -402,9 +402,9 @@ export class ConnectionManager {
         if (pluginLoader) {
           try {
             pluginLoader.destroy();
-            logger.debug('Plugins stopped');
+            logger.debug('Plugin dihentikan');
           } catch (error) {
-            logger.error({ error: error.message }, 'Failed to stop plugins');
+            logger.error({ error: error.message }, 'Gagal menghentikan plugin');
           }
         }
 
@@ -423,7 +423,7 @@ export class ConnectionManager {
           {
             attempt: this.connectionAttempts,
           },
-          'Connecting to WhatsApp'
+          'Menghubungkan WhatsApp'
         );
 
         // Try pairing code
@@ -431,7 +431,7 @@ export class ConnectionManager {
           try {
             await setupPairingCode(conn);
           } catch (error) {
-            logger.error({ error: error.message }, 'Pairing code setup failed');
+            logger.error({ error: error.message }, 'Penyiapan pairing kode gagal');
           }
         }
 
@@ -440,14 +440,14 @@ export class ConnectionManager {
 
       // ========== NEW LOGIN ==========
       if (isNewLogin) {
-        logger.info('New login detected');
+        logger.info('Login baru terdeteksi');
 
         if (authStore && typeof authStore.saveCredentials === 'function') {
           try {
             authStore.saveCredentials();
             logger.debug('Credentials saved');
           } catch (error) {
-            logger.error({ error: error.message }, 'Failed to save credentials');
+            logger.error({ error: error.message }, 'Gagal menyimpan kredensial');
           }
         }
 
@@ -468,7 +468,7 @@ export class ConnectionManager {
         const { shouldClear } = authStore.recordError(error);
 
         if (shouldClear) {
-          logger.error('Too many errors - clearing session');
+          logger.error('Terlalu banyak error - membersihkan session');
           await authStore.clearSession?.();
         }
       }
@@ -481,7 +481,7 @@ export class ConnectionManager {
     try {
       // ===== CLEAR SESSION =====
       if (clearCodes.includes(statusCode)) {
-        logger.error({ statusCode }, 'Session invalid - clearing');
+        logger.error({ statusCode }, 'Session tidak valid - membersihkan');
 
         if (authStore && typeof authStore.clearSession === 'function') {
           await authStore.clearSession();
@@ -493,7 +493,7 @@ export class ConnectionManager {
 
       // ===== RESTORE SESSION =====
       if (restoreCodes.includes(statusCode)) {
-        logger.warn({ statusCode }, 'Session corrupted - attempting restore');
+        logger.warn({ statusCode }, 'Session corrupted - memulai perbaikan');
 
         if (authStore && typeof authStore.restoreSession === 'function') {
           const result = await authStore.restoreSession();
@@ -551,14 +551,14 @@ export class ConnectionManager {
     }, CONFIG.health.checkIntervalMs);
 
     this.healthCheckTimer?.unref?.();
-    logger.debug('Health monitoring started');
+    logger.debug('Monitoring kesehatan dimulai');
   }
 
   stopHealthMonitoring() {
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = null;
-      logger.debug('Health monitoring stopped');
+      logger.debug('Monitoring kesehatan berhenti');
     }
   }
 
@@ -576,7 +576,7 @@ export class ConnectionManager {
             age: connectionAge,
             threshold: CONFIG.health.timeoutThreshold,
           },
-          'Connection may be stale'
+          'Koneksi mungkin basi'
         );
       }
     }
@@ -613,7 +613,7 @@ export class ConnectionManager {
   }
 
   logStats() {
-    logger.info(this.getStats(), 'Connection statistics');
+    logger.info(this.getStats(), 'Statistik koneksi');
   }
 
   // ==========================================================================
@@ -639,7 +639,7 @@ export class ConnectionManager {
     this.setState(ConnectionState.DISCONNECTED);
     this.isReconnecting = false;
 
-    logger.info('Connection manager cleanup complete');
+    logger.info('Connection manager cleanup berhasil');
   }
 }
 

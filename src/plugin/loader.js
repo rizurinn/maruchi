@@ -41,7 +41,7 @@ export default class PluginLoader {
     
     // Scan file manual saat startup
     const files = await this._scanFiles();
-    log.info(`Loading ${files.length} plugins...`);
+    log.info(`Memuat ${files.length} plugin...`);
     
     let ok = 0, fail = 0;
     
@@ -54,12 +54,12 @@ export default class PluginLoader {
             this.plugins.set(rel, plugin);
             return true;
         }
-        throw new Error('Invalid plugin');
+        throw new Error('Plugin tidak valid');
     }));
 
     results.forEach(res => res.status === 'fulfilled' ? ok++ : fail++);
 
-    log.info(`Load complete: ${ok} ok, ${fail} fail`);
+    log.info(`Berhasil memuat: ${ok} ok, ${fail} gagal`);
     this.buildRouter();
     Bun.gc(false);
     
@@ -98,7 +98,7 @@ export default class PluginLoader {
       return { success: true, file: rel };
 
     } catch (e) {
-      log.error({ err: e.message }, 'Manual reload error');
+      log.error({ err: e.message }, 'Manual reload gagal');
       return { success: false, error: e.message };
     }
   }
@@ -146,7 +146,7 @@ export default class PluginLoader {
 
       return plugin;
     } catch (e) {
-      log.error({ error: e.message, file: fullpath }, 'Import failed');
+      log.error({ error: e.message, file: fullpath }, 'Import gagal');
       // Jangan throw, return null agar bot tidak crash
       return null;
     }

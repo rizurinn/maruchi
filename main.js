@@ -92,13 +92,13 @@ async function setupPairingCode(conn) {
 
   let phone = global.config.pairing;
   if (!phone) {
-    log.debug('No pairing number provided');
+    log.debug('Nomor pairing tidak ditemukan');
     return;
   }
   phone = phone.replace(/\D/g, '');
 
   if (!phone.startsWith('62') && !phone.startsWith('31')) {
-    log.warn({ phone }, 'Invalid pairing number format');
+    log.warn({ phone }, 'Format nomor pairing tidak valid');
     return;
   }
 
@@ -106,13 +106,13 @@ async function setupPairingCode(conn) {
   try {
     await new Promise((resolve) => setTimeout(resolve, 4000));
 
-    log.info({ phone: phone.substring(0, 5) + '***' }, 'Requesting pairing code...');
+    log.info({ phone: phone.substring(0, 5) + '***' }, 'Meminta kode pairng...');
     let code = await conn.requestPairingCode(phone);
     code = code?.match(/.{1,4}/g)?.join('-');
 
-    log.info(`\x1b[32mPAIRING CODE: ${code}\x1b[0m`);
+    log.info(`\x1b[32mKODE PAIRING: ${code}\x1b[0m`);
   } catch (e) {
-    log.error({ err: e.message, stack: e.stack }, 'Pairing request failed');
+    log.error({ err: e.message, stack: e.stack }, 'Kode pairing gagal diminta');
   } finally {
     isPairingRequesting = false;
   }
@@ -127,7 +127,7 @@ async function handleMessageUpsert(events, conn, authStore) {
     if (!raw.message) continue;
     const messageId = raw.key.id;
     if (messageId && resources.msgRetryCounterCache.get(messageId)) {
-      log.trace({ messageId }, 'Duplicate message skipped');
+      log.trace({ messageId }, 'Melewati pesan duplikat.');
       continue;
     }
     if (messageId) {
@@ -168,7 +168,7 @@ async function maruchi() {
     }
 
     const { version } = await fetchLatestBaileysVersion();
-    log.info({ version: version.join('.') }, 'WhatsApp Web version loaded');
+    log.info({ version: version.join('.') }, 'Versi WhatsApp Web dimuat');
 
     await resources.store.init();
 
@@ -196,7 +196,7 @@ async function maruchi() {
             await conn.end();
           }
         } catch (e) {
-          log.debug({ err: e.message }, 'Socket end failed (may already be closed)');
+          log.debug({ err: e.message }, 'Socket end tidak valid (mungkin sudah berhasil ditutup)');
         }
       },
       { priority: 95 }
@@ -218,7 +218,7 @@ async function maruchi() {
             pluginLoader: resources.pluginLoader,
             store: resources.store,
             reconnectCallback: async () => {
-              log.info('Reconnection callback triggered');
+              log.info('Reconnection callback terpicu');
               await maruchi();
             },
           });
@@ -245,7 +245,7 @@ async function maruchi() {
         err: err.message,
         stack: err.stack,
       },
-      'Maruchi initialization error'
+      'Inisialisasi maruchi error'
     );
     throw err;
   }
@@ -262,13 +262,13 @@ async function startup() {
         err: err.message,
         stack: err.stack,
       },
-      'Startup failed'
+      'Startup gagal'
     );
 
     try {
       await shutdownManager.shutdown('startup_error');
     } catch (shutdownErr) {
-      log.fatal({ err: shutdownErr.message }, 'Shutdown after startup error failed');
+      log.fatal({ err: shutdownErr.message }, 'Shutdown setelah kesalahan startup gagal');
     }
 
     process.exit(1);
@@ -281,7 +281,7 @@ process.on('uncaughtException', (err) => {
       error: err.message,
       stack: err.stack,
     },
-    'Uncaught Exception (backup handler)'
+    'Uncaught Exception'
   );
 });
 
@@ -291,7 +291,7 @@ process.on('unhandledRejection', (reason, promise) => {
       reason: reason?.message || String(reason),
       stack: reason?.stack,
     },
-    'Unhandled Rejection (backup handler)'
+    'Unhandled Rejection'
   );
 });
 
@@ -301,7 +301,7 @@ startup().catch((err) => {
       error: err.message,
       stack: err.stack,
     },
-    'Fatal startup error'
+    'Fatal startup'
   );
   process.exit(1);
 });

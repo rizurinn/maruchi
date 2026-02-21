@@ -1,6 +1,6 @@
 import { quotedLyo } from '#scraper';
 
-let handler = async (m, { conn, text, loading }) => {
+let handler = async (m, { conn, usedPrefix, command, text, loading }) => {
   let teks, orang;
 
   if (m.quoted) {

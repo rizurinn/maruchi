@@ -338,13 +338,11 @@ function getTotalCommandsOnly(loader) {
 }
 
 function formatUptime(seconds) {
-    // Numeric operations are fast enough in JS
     seconds = Number(seconds);
     const d = Math.floor(seconds / 86400);
     const h = Math.floor((seconds % 86400) / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     
-    // Gunakan conditional push array
     const parts = [];
     if (d > 0) parts.push(`${d} hari`);
     if (h > 0) parts.push(`${h} jam`);

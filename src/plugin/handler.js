@@ -18,7 +18,7 @@ function escapeRegex(str) {
 const safe = async (fn) => {
   try { return await fn(); } 
   catch (e) { 
-      log.error({ err: e.message }, 'Safe execution failed');
+      log.error({ err: e.message }, 'Safe execution gagal');
       return null; 
   }
 };
@@ -209,7 +209,7 @@ async function executePlugin(conn, m, { plugin, fn, filename }, extra) {
         });
         return true;
     } catch (e) {
-        log.error({ err: e.message, plugin: filename }, 'Plugin execution failed');
+        log.error({ err: e.message, plugin: filename }, 'Eksekusi plugin gagal');
         const cutErr = e.stack?.length > 100 ? e.stack?.substring(0, 200) + '...' : e?.stack || e.message;
         m.reply(`🍓 *Error: ${filename}*\n\n\`\`\`${cutErr.trim()}\`\`\``);
         return true;

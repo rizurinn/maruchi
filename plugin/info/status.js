@@ -260,6 +260,6 @@ Report Generated: ${new Date().toLocaleString("en-US", {
 
 
 handler.category = ["info"];
-handler.command = ["status", "stats"];
+handler.command = ["status"];
 
 export default handler;

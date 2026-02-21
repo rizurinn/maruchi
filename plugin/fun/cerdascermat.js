@@ -79,7 +79,7 @@ let handler = async (m, { conn, args, command, usedPrefix }) => {
     if (!count) count = 5;
     if (count < 1 || count > 10) return m.reply('🍰 *Jumlah soal minimal 1 dan maksimal 10!*');
 
-    const res = await fetch(`https://api.siputzx.my.id/api/games/cc-sd?matapelajaran=${matapelajaran}&jumlahsoal=${count}`);
+    const res = await fetch(`https://api.siputzx.my.id/api/games/cc-sd?matapelajaran=${matapelajaran.toLowerCase()}&jumlahsoal=${count}`);
     if (!res.ok) throw new Error('API Error');
     const json = await res.json();
     if (!json.status || !json.data || !json.data.soal || json.data.soal.length === 0) {
