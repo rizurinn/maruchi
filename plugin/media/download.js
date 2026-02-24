@@ -1,5 +1,5 @@
 import { unlink, stat } from "fs/promises";
-import { fbDownload, igDownload, mfDownload, ttDownload, bilibiliDl, douyinDl, twitterDl, capcutDl, pinterest, ytVideo } from '#scraper';
+import { fbDownload, igDownload, mfDownload, ttDownload, bilibiliDl, douyinDl, twitterDl, sfileDl, capcutDl, pinterest, ytVideo } from '#scraper';
 
 const PATTERNS = {
   bilibili: /^(https?:\/\/)?(www\.)?bilibili\.(tv|com)\/(video|play)\/\d+/i,
@@ -9,6 +9,7 @@ const PATTERNS = {
   tiktok: /^(https?:\/\/)?(www\.)?(tiktok\.com|vt\.tiktok\.com|vm\.tiktok\.com)\/.+/i,
   twitter: /^(https?:\/\/)?(www\.)?(twitter\.com|x\.com)\/.+/i,
   mediafire: /^(https?:\/\/)?(www\.)?mediafire\.com\/(file|view|download)\/.+/i,
+  sfile: /^(https?:\/\/)?(www\.)?sfile\.co\/(download\/)?[A-Za-z0-9]+(?:[?#].*)?$/i,
   douyin: /^(https?:\/\/)?(www\.)?(v.douyin\.com|iesdouyin\.com)\/.+/i,
   youtube: /^(https?:\/\/)?(www\.)?(youtube\.com\/|youtu\.be\/|music\.youtube\.com\/|youtube\.com\/live\/)[\w\-_]+/i,
   pinterest: /^(https?:\/\/)?([\w]+\.)?pinterest\.(com|co\.uk|ca|fr|de|it|es|id|ph|au|nz|jp|kr|mx|br|cl|ar)\/pin\/[\w\-]+\/?|^(https?:\/\/)?(www\.)?pin\.it\/[\w\-]+\/?/i,
@@ -38,7 +39,7 @@ let handler = async (m, { conn, usedPrefix, command, args, Func, loading }) => {
     return m.reply(`🍭 *Universal Downloader*
 
 *Platform yang didukung:*
-Facebook, Instagram, TikTok, YouTube, Bilibili, Twitter/X, Capcut, Douyin, MediaFire, Pinterest
+Facebook, Instagram, TikTok, YouTube, Bilibili, Twitter/X, Capcut, Douyin, Sfile, MediaFire, Pinterest
 
 *Penggunaan:*
 ${usedPrefix + command} <url>
@@ -152,28 +153,32 @@ _Catatan: Mendukung download bulk maksimal 5_`);
         try {
             const data = await mfDownload(url);
             let { url: dlUrl, fileName, fileSize, uploaded } = data;
-            const res = await fetch(dlUrl);
-            let buffer = Buffer.from(await res.arrayBuffer());
             await m.reply(`🍣 *MediaFire Downloader*\n\n${fileName} (${fileSize})\n${dlUrl}`);
-            await conn.sendMessage(m.chat, { document: buffer, fileName: fileName, mimetype: 'application/zip' }, { quoted: m });
+            await conn.sendMessage(m.chat, { document: { url: dlUrl }, fileName: fileName, mimetype: 'application/zip' }, { quoted: m });
             buffer = null;
         } catch {
             const data = await fetch(`https://fgsi.koyeb.app/api/downloader/mediafire?apikey=${global.config.apikey.fgsi}&url=${encodeURIComponent(url)}`);
             if (!data.ok) throw new Error('Gagal mengunduh media');
             const json = await data.json();
             let { downloadUrl, filename, size, mimetype } = json.data;
-            const res = await fetch(downloadUrl);
-            let buffer = Buffer.from(await res.arrayBuffer());
             await m.reply(`🍣 *MediaFire Downloader*\n\n${filename} (${Func.formatSize(size)})\n${downloadUrl}`);
-            await conn.sendMessage(m.chat, { document: buffer, fileName: filename, mimetype: mimetype }, { quoted: m });
+            await conn.sendMessage(m.chat, { document: { url: downloadUrl }, fileName: filename, mimetype: mimetype }, { quoted: m });
             buffer = null;
         }
         break;
       }
       
+      case 'sfile': {
+        const result = await sfileDl(url);
+        if (!result.success) return m.reply('🍓 *Gagal mendapatkan url download*');
+        const data = result.results;
+        await conn.sendMessage(m.chat, { document: { url: data.download_url }, fileName: data.filename, mimetype: data.mime_type }, { quoted: m });
+        break;
+      }
+      
       case 'pinterest': {
         const result = await pinterest.download(url);
-        if (!result || !result.media) return m.reply('*🍓 Gagal mengunduh konten. Silakan periksa URL atau coba lagi.*');
+        if (!result || !result.media) return m.reply('🍓 *Gagal mengunduh konten. Silakan periksa URL atau coba lagi.*');
         const caption = `🍣 *Pinterest Downloader*\n\n🍙 *Uploaded By: ${result.username || 'Unknown'}*\n${result.title || 'Pinterest Media'}`;
         if (result.isVideo) {
           await conn.sendMessage(m.chat, {

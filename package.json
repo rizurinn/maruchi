@@ -1,4 +1,12 @@
 {
+  "name": "maruchi",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "start": "bun main.js",
+    "tes": "bun --smol --hot main.js"
+  },
+  "author": "rizurinn",
   "dependencies": {
     "@cacheable/node-cache": "1.4.0",
     "acorn": "^8.15.0",
@@ -15,19 +23,15 @@
     "#addon/*": "./lib/addon/*",
     "#scraper": "./lib/scraper/index.js"
   },
-  "scripts": {
-    "start": "bun main.js",
-    "tes": "bun --smol --hot --inspect main.js"
-  },
   "trustedDependencies": [
     "baileys",
     "protobufjs",
     "sharp"
   ],
-  "type": "module",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
     "globals": "^17.0.0"
   }
 }
+

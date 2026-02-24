@@ -25,10 +25,9 @@ let handler = async (m, { conn }) => {
                     name !== "node_modules" &&
                     name !== "build" &&
                     name !== "package-lock.json" &&
-                    name !== "yarn.lock" &&
-                    name !== "pnpm-lock.yaml" &&
-                    name !== "venv" &&
-                    name !== "tmp"
+                    name !== "bun.lock" &&
+                    name !== "conf" &&
+                    name !== ".venv"
             );
 
         // Gunakan Bun.spawnSync

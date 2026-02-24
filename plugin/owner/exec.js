@@ -18,12 +18,11 @@ const blocked = [
     ">:(){ :|: & };:",
 ];
 
-const handler = async (m, { conn, isOwner }) => {
+const handler = async (m, { conn, text, isOwner }) => {
     if (!isOwner) return;
-    const fullText = m.body || "";
-    if (!fullText.startsWith("$ ")) return;
+    const fullText = text || "";
 
-    let cmdText = fullText.slice(2).trim();
+    let cmdText = fullText.trim();
     if (!cmdText) return;
 
     const flags = {
@@ -109,7 +108,7 @@ const handler = async (m, { conn, isOwner }) => {
     return await conn.sendMessage(m.chat, { text: resultText });
 };
 
-handler.customPrefix = /^\$ /;
-handler.command = /(?:)/i;
+handler.command = ["ex"];
+handler.restrict = { ownerOnly: true };
 
 export default handler;
